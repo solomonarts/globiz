@@ -1,0 +1,5 @@
+[functions.manage-user-access]
+verify_jwt = true
+
+[functions.invite-platform-user]
+verify_jwt = true
