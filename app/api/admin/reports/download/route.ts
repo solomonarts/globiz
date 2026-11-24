@@ -22,9 +22,17 @@ export async function GET(request: Request) {
   if (error || !data?.report) return new NextResponse("Unable to generate this report.", { status: 400 });
   try {
     const report = data.report as ReportDocument;
-    const content = token.format === "csv" ? renderCsv(report) : await renderPdf(report);
+    let content: string | ArrayBuffer;
+    if (token.format === "csv") {
+      content = renderCsv(report);
+    } else {
+      const pdf = await renderPdf(report);
+      const body = new ArrayBuffer(pdf.byteLength);
+      new Uint8Array(body).set(pdf);
+      content = body;
+    }
     const date = new Date(report.issued_at).toISOString().slice(0, 10);
-    return new NextResponse(token.format === "csv" ? content : new Uint8Array(content), {
+    return new NextResponse(content, {
       headers: {
         "Content-Type": reportContentType(token.format),
         "Content-Disposition": `attachment; filename="glowbiz-${token.type}-${date}.${token.format}"`,

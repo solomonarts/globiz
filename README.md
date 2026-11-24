@@ -6,13 +6,28 @@ Responsive vocational learning and marketplace application built with Next.js Ap
 
 1. Install Node.js 20.9 or newer and dependencies with `npm install`.
 2. Create a Supabase project and copy `.env.example` to `.env.local`.
-3. Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `NEXT_PUBLIC_SITE_URL` for your deployment. Keep the service role key server-only; never expose it to browser code.
+3. Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or the legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY`), and `NEXT_PUBLIC_SITE_URL` for your deployment. Keep the service role key server-only; never expose it to browser code.
 4. Apply all migrations in `supabase/migrations` in timestamp order using the Supabase SQL editor or Supabase CLI.
 5. Set `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` for privileged Next.js recovery/admin operations. Keep this server-only key out of browser code and public environment variables. Invitation and account-access functions use the key only inside the Supabase Edge runtime.
 6. Set `REPORT_SIGNING_SECRET` to a randomly generated secret of at least 32 characters. It signs administrator report links, which expire after ten minutes. Keep it server-only.
 7. Create a tutor account, promote it to approved as described below, then run `supabase/seed.sql` to add a starter curriculum.
 8. In Supabase Auth, set the local site URL and allowed redirect URL to `http://localhost:3000`.
 9. Run `npm run dev`.
+
+## Deploy on Vercel through GitHub
+
+1. Push this repository to GitHub. In Vercel, choose **Add New → Project**, import the GitHub repository, and authorize Vercel to access it. Vercel detects the Next.js framework; `vercel.json` sets the install and build commands.
+2. In the Vercel project settings, add these environment variables for **Production**, **Preview**, and **Development** as appropriate:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY` for older Supabase projects)
+   - `NEXT_PUBLIC_SITE_URL` (the production domain for Production; use the matching preview URL when needed)
+   - `SUPABASE_SERVICE_ROLE_KEY` (server-only; required for privileged account operations)
+   - `REPORT_SIGNING_SECRET` (server-only; at least 32 characters)
+3. Deploy from Vercel. After linking GitHub, pushes to the production branch create production deployments and pull requests create Preview deployments. Configure the production branch in Vercel's Git settings if it is not `main`.
+4. In Supabase **Authentication → URL Configuration**, set the production site URL and add the Vercel production domain and preview domains to the allowed redirect URLs (for example, `https://your-project.vercel.app/**`). Also set the final custom domain there after adding it to Vercel.
+5. Apply the SQL migrations and deploy the Supabase Edge Functions separately as described below. Add the production and preview app origins to the Supabase `APP_ALLOWED_ORIGINS` secret where functions enforce origin checks.
+
+Do not commit `.env.local`, service-role keys, or signing secrets. The repository ignores local environment files and `.vercel` project metadata. Vercel's Git integration handles deployment; no Vercel token or deployment secret is needed in GitHub Actions.
 
 ### Deploy Supabase Edge Functions
 
