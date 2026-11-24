@@ -26,7 +26,16 @@ export async function signUp(formData: FormData) {
   const supabase = await createClient();
   if (!supabase) redirect("/signup?error=Add+Supabase+environment+variables+to+continue");
   const { data, error } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.password, options: { data: { full_name: parsed.data.name, role: parsed.data.role, qualification_summary:parsed.data.qualifications } } });
-  if (error || !data.user) redirect("/signup?error=Unable+to+create+account.+Try+another+email.");
+  if (error || !data.user) {
+    // Keep auth failures generic to visitors, but retain the safe diagnostic
+    // fields in server logs so signup trigger/configuration issues are debuggable.
+    console.error("Supabase signup failed", {
+      code: error?.code,
+      status: error?.status,
+      message: error?.message,
+    });
+    redirect("/signup?error=Unable+to+create+account.+Check+your+email+or+contact+support.");
+  }
   redirect("/login?message=Account+created.+Check+your+email+to+verify+your+account.");
 }
 
